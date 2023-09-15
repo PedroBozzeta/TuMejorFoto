@@ -2,13 +2,6 @@ import React, { useEffect, useState } from "react";
 import { AiOutlineLogout } from "react-icons/ai";
 import { useParams, useNavigate } from "react-router-dom";
 import { GoogleLogout } from "react-google-login";
-
-import {
-  userCreatedPinsQuery,
-  userQuery,
-  userSavedPinsQuery,
-} from "../utils/data";
-import { client } from "../client";
 import MasonryLayout from "./MasonryLayout";
 import Spinner from "./Spinner";
 
@@ -20,7 +13,7 @@ const notActiveBtnStyles =
 const UserProfile = () => {
   const [user, setUser] = useState();
   const [pins, setPins] = useState();
-  const [text, setText] = useState("Created");
+  const [text, setText] = useState("Publicado");
   const [activeBtn, setActiveBtn] = useState("created");
   const navigate = useNavigate();
   const { userId } = useParams();
@@ -31,25 +24,40 @@ const UserProfile = () => {
       : localStorage.clear();
 
   useEffect(() => {
-    const query = userQuery(userId);
-    client.fetch(query).then((data) => {
-      setUser(data[0]);
-    });
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/user/${userId}`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Error al obtener el usuario");
+        }
+        return response.json();
+      })
+      .then((user) => {
+        setUser(user);
+      })
+      .catch((error) => {
+        console.error("Error:", error.message);
+      });
   }, [userId]);
 
   useEffect(() => {
-    if (text === "Created") {
-      const createdPinsQuery = userCreatedPinsQuery(userId);
-
-      client.fetch(createdPinsQuery).then((data) => {
-        setPins(data);
-      });
+    if (text === "Publicado") {
+      fetch(`${process.env.REACT_APP_BACKEND_URL}/posts?userId=${userId}`)
+        .then((response) => response.json())
+        .then((data) => {
+          setPins(data);
+        })
+        .catch((error) => {
+          console.error("Error fetching pins:", error);
+        });
     } else {
-      const savedPinsQuery = userSavedPinsQuery(userId);
-
-      client.fetch(savedPinsQuery).then((data) => {
-        setPins(data);
-      });
+      fetch(`${process.env.REACT_APP_BACKEND_URL}/saved?userId=${userId}`)
+        .then((response) => response.json())
+        .then((data) => {
+          setPins(data);
+        })
+        .catch((error) => {
+          console.error("Error fetching pins:", error);
+        });
     }
   }, [text, userId]);
 
@@ -59,7 +67,7 @@ const UserProfile = () => {
     navigate("/login");
   };
 
-  if (!user) return <Spinner message="Loading profile" />;
+  if (!user) return <Spinner message="Cargando Perfil" />;
 
   return (
     <div className="relative pb-2 h-full justify-center items-center">
@@ -81,7 +89,7 @@ const UserProfile = () => {
             {user.userName}
           </h1>
           <div className="absolute top-0 z-1 right-0 p-2">
-            {userId === User.googleId && (
+            {userId === User?.googleId && (
               <GoogleLogout
                 clientId={`${process.env.REACT_APP_GOOGLE_API_TOKEN}`}
                 render={(renderProps) => (
@@ -111,7 +119,7 @@ const UserProfile = () => {
               activeBtn === "created" ? activeBtnStyles : notActiveBtnStyles
             }`}
           >
-            Created
+            Publicado
           </button>
           <button
             type="button"
@@ -123,7 +131,7 @@ const UserProfile = () => {
               activeBtn === "saved" ? activeBtnStyles : notActiveBtnStyles
             }`}
           >
-            Saved
+            Guardado
           </button>
         </div>
 
@@ -133,7 +141,7 @@ const UserProfile = () => {
 
         {pins?.length === 0 && (
           <div className="flex justify-center font-bold items-center w-full text-1xl mt-2">
-            No Pins Found!
+            Sin imágenes encontradas!
           </div>
         )}
       </div>

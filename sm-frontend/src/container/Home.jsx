@@ -3,11 +3,9 @@ import { HiMenu } from "react-icons/hi";
 import { AiFillCloseCircle } from "react-icons/ai";
 import { Link, Route, Routes } from "react-router-dom";
 import { Sidebar, Login, UserProfile } from "../components";
-import { userQuery } from "../utils/data.js";
-import { client } from "../client";
 import logo from "../assets/logo.png";
 import Pins from "./Pins";
-import { fetchUser } from "../utils/fetchUser";
+import { fetchUser } from "../clientFront";
 const Home = () => {
   const [toggleSidebar, setToggleSidebar] = useState(false);
   const [user, setUser] = useState(null);
@@ -16,10 +14,21 @@ const Home = () => {
   const userInfo = fetchUser();
 
   useEffect(() => {
-    const query = userQuery(userInfo?.googleId);
-    client.fetch(query).then((data) => {
-      setUser(data[0]);
-    });
+    if (userInfo?.googleId) {
+      fetch(`${process.env.REACT_APP_BACKEND_URL}/user/${userInfo?.googleId}`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Error al obtener el usuario");
+          }
+          return response.json();
+        })
+        .then((user) => {
+          setUser(user);
+        })
+        .catch((error) => {
+          console.error("Error:", error.message);
+        });
+    }
   }, []);
 
   useEffect(() => {

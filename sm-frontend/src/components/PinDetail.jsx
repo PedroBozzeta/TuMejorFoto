@@ -1,63 +1,74 @@
 import React, { useEffect, useState } from "react";
 import { MdDownloadForOffline } from "react-icons/md";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { v4 as uuidv4 } from "uuid";
-
-import { client, urlFor } from "../client";
+import { getUrlFunction } from "../clientFront";
 import MasonryLayout from "./MasonryLayout";
-import { pinDetailMorePinQuery, pinDetailQuery } from "../utils/data";
 import Spinner from "./Spinner";
 
 const PinDetail = ({ user }) => {
+  const [url, setUrl] = useState("");
   const { pinId } = useParams();
   const [pins, setPins] = useState();
   const [pinDetail, setPinDetail] = useState();
+  const [comments, setComments] = useState(null);
   const [comment, setComment] = useState("");
   const [addingComment, setAddingComment] = useState(false);
+  const [commentAdded, setCommentAdded] = useState(false);
 
-  const navigate = useNavigate();
   const fetchPinDetails = () => {
-    const query = pinDetailQuery(pinId);
-
-    if (query) {
-      client.fetch(`${query}`).then((data) => {
-        setPinDetail(data[0]);
-        if (data[0]) {
-          const query1 = pinDetailMorePinQuery(data[0]);
-          client.fetch(query1).then((res) => {
-            setPins(res);
-          });
-        }
-      });
+    if (pinId) {
+      fetch(`${process.env.REACT_APP_BACKEND_URL}/pin-details?pinId=${pinId}`)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data?.pinData) {
+            setPinDetail(data.pinData);
+            setPins(data.relatedPins);
+            setComments(data.comments);
+          }
+        });
+      fetchData();
+    }
+  };
+  const fetchData = async () => {
+    const data = await getUrlFunction(pinId);
+    setUrl(data.imageUrl);
+  };
+  const addComment = () => {
+    if (comment && user) {
+      setAddingComment(true);
+      fetch(`${process.env.REACT_APP_BACKEND_URL}/comment`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pinId: pinId,
+          userId: user?._id,
+          comment: comment,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.send) {
+            console.log("Comentario enviado");
+          } else {
+            console.log("Error al enviar el comentario");
+          }
+        })
+        .then(() => {
+          setCommentAdded(true);
+        });
     }
   };
 
   useEffect(() => {
+    setComment("");
+    setAddingComment(false);
     fetchPinDetails();
-  }, [pinId]);
-
-  const addComment = () => {
-    if (comment) {
-      setAddingComment(true);
-
-      client
-        .patch(pinId)
-        .setIfMissing({ comments: [] })
-        .insert("after", "comments[-1]", [
-          {
-            comment,
-            _key: uuidv4(),
-            postedBy: { _type: "postedBy", _ref: user?._id },
-          },
-        ])
-        .commit()
-        .then(() => {
-          setComment("");
-          setAddingComment(false);
-          fetchPinDetails();
-        });
-    }
-  };
+  }, [commentAdded]);
+  useEffect(() => {
+    fetchPinDetails();
+  }, [pinId, comments]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
@@ -66,9 +77,14 @@ const PinDetail = ({ user }) => {
   };
 
   if (!pinDetail) {
-    return <Spinner message="Showing pin" />;
+    return <Spinner message="Mostrando imagen" />;
   }
-
+  const getAbsoluteURL = (url) => {
+    if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
+      return "http://" + url;
+    }
+    return url;
+  };
   return (
     <>
       {pinDetail && (
@@ -79,7 +95,7 @@ const PinDetail = ({ user }) => {
           <div className="flex justify-center items-center md:items-start flex-initial">
             <img
               className="rounded-t-3xl rounded-b-lg"
-              src={pinDetail?.image && urlFor(pinDetail?.image).url()}
+              src={pinDetail?.image && url}
               alt="user-post"
             />
           </div>
@@ -94,15 +110,13 @@ const PinDetail = ({ user }) => {
                   <MdDownloadForOffline />
                 </a>
               </div>
-              <a href={pinDetail.destination} target="_blank" rel="noreferrer">
-                {pinDetail.destination?.slice(8)}
+              <a
+                href={getAbsoluteURL(pinDetail.destination)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {pinDetail.destination?.slice(0, 20)}...
               </a>
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold break-words mt-3">
-                {pinDetail.title}
-              </h1>
-              <p className="mt-3">{pinDetail.about}</p>
             </div>
             <Link
               to={`/user-profile/${pinDetail?.postedBy?._id}`}
@@ -115,61 +129,77 @@ const PinDetail = ({ user }) => {
               />
               <p className="font-bold">{pinDetail?.postedBy?.userName}</p>
             </Link>
-            <h2 className="mt-5 text-2xl">Comments</h2>
+            <div>
+              <h1 className="text-4xl font-bold break-words mt-3">
+                {pinDetail.title}
+              </h1>
+              <p className="mt-3">{pinDetail.about}</p>
+            </div>
+            {pinDetail?.comments && (
+              <h2 className="mt-5 font-bold text-1xl">Comentarios</h2>
+            )}
             <div className="max-h-370 overflow-y-auto">
               {pinDetail?.comments?.map((item) => (
                 <div
                   className="flex gap-2 mt-5 items-center bg-white rounded-lg"
                   key={item._key}
                 >
-                  <img
-                    src={item.postedBy?.image}
-                    className="w-10 h-10 rounded-full cursor-pointer"
-                    alt="user-profile"
-                  />
-                  <div className="flex flex-col">
-                    <p className="font-bold">{item.postedBy?.userName}</p>
+                  <Link to={`/user-profile/${item?.postedBy?._id}`}>
+                    <img
+                      src={item.postedBy?.image}
+                      className="w-10 h-10 rounded-full cursor-pointer"
+                      alt="user-profile"
+                    />
+                  </Link>
+                  <div className="flex flex-col ">
+                    <Link to={`/user-profile/${item?.postedBy?._id}`}>
+                      <p className="font-bold cursor-pointer">
+                        {item.postedBy?.userName}
+                      </p>
+                    </Link>
                     <p>{item.comment}</p>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="flex flex-wrap mt-6 gap-3">
-              <Link to={`/user-profile/${user?._id}`}>
-                <img
-                  src={user?.image}
-                  className="w-10 h-10 rounded-full cursor-pointer"
-                  alt="user-profile"
+            {user && (
+              <div className="flex flex-wrap mt-6 gap-3">
+                <Link to={`/user-profile/${user?._id}`}>
+                  <img
+                    src={user?.image}
+                    className="w-10 h-10 rounded-full cursor-pointer"
+                    alt="user-profile"
+                  />
+                </Link>
+                <input
+                  className=" flex-1 border-gray-100 outline-none border-2 p-2 rounded-2xl focus:border-gray-300"
+                  type="text"
+                  placeholder="Añade un comentario"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
-              </Link>
-              <input
-                className=" flex-1 border-gray-100 outline-none border-2 p-2 rounded-2xl focus:border-gray-300"
-                type="text"
-                placeholder="Añade un comentario"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                onKeyDown={handleKeyDown}
-              />
-              <button
-                type="button"
-                className="bg-red-500 text-white rounded-full px-6 py-2 font-semibold text-base outline-none"
-                onClick={addComment}
-              >
-                {addingComment ? "Enviando..." : "Enviar"}
-              </button>
-            </div>
+                <button
+                  type="button"
+                  className="bg-red-500 text-white rounded-full px-6 py-2 font-semibold text-base outline-none"
+                  onClick={addComment}
+                >
+                  {addingComment ? "Enviando..." : "Enviar"}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
       {pins?.length > 0 && (
         <h2 className="text-center font-bold text-2xl mt-8 mb-4">
-          More like this
+          Más como esta
         </h2>
       )}
       {pins ? (
         <MasonryLayout pins={pins} />
       ) : (
-        <Spinner message="Loading more pins" />
+        <Spinner message="Cargando más imágenes" />
       )}
     </>
   );

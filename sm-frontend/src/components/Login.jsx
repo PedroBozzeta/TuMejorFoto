@@ -3,9 +3,7 @@ import GoogleLogin from "react-google-login";
 import { useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import shareVideo from "../assets/share.mp4";
-import { gapi } from "gapi-script";
 import logo from "../assets/logowhite.png";
-import { client } from "../client";
 const Login = () => {
   const navigate = useNavigate();
   const responseGoogle = (response) => {
@@ -18,19 +16,40 @@ const Login = () => {
       userName: name,
       image: imageUrl,
     };
-    client.createIfNotExists(doc).then(() => {
-      navigate("/", { replace: true });
-    });
-  };
-
-  useEffect(() => {
-    const start = () => {
-      gapi.auth2.getAuthInstance({
-        clientId: process.env.REACT_APP_GOOGLE_API_TOKEN,
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(doc),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("El inicio de sesión falló");
+        }
+        return response.json();
+      })
+      .then((response) => {
+        navigate("/", { replace: true });
+      })
+      .catch((error) => {
+        console.error(
+          "Hubo un problema con la operación fetch: ",
+          error.message
+        );
       });
-    };
-    gapi.load("client:auth2", start);
-  }, []);
+  };
+  // setGoogleLogin(){
+
+  // }
+  // useEffect(() => {
+  //   const start = () => {
+  //     gapi.auth2.getAuthInstance({
+  //       clientId: process.env.REACT_APP_GOOGLE_API_TOKEN,
+  //     });
+  //   };
+  //   gapi.load("client:auth2", start);
+  // }, []);
   return (
     <div className="flex justify-start items-center flex-col h-screen">
       <div className="relative w-full h-full">
@@ -49,7 +68,7 @@ const Login = () => {
           </div>
           <div className="shadow-2xl">
             <GoogleLogin
-              clientId={process.env.REACT_APP_GOOGLE_API_TOKEN}
+              clientId="625153889087-l2h9q50udr516pa9k7bsstl0s9as4otb.apps.googleusercontent.com"
               render={(renderProps) => (
                 <button
                   disabled={renderProps.disabled}
@@ -57,7 +76,7 @@ const Login = () => {
                   className="bg-mainColor flex justify-center items-center p-3 rounded-lg cursor-pointer outline-none"
                 >
                   <FcGoogle className="mr-4" />
-                  Sign in with Google
+                  Ingresa con tu cuenta de Google
                 </button>
               )}
               onSuccess={responseGoogle}

@@ -1,8 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, Link } from "react-router-dom";
 import { RiHomeFill } from "react-icons/ri";
-import { IoIosArrowForward } from "react-icons/io";
-import { categories } from "../utils/data";
+import { getCategories } from "../clientFront.js";
 import logo from "../assets/logo.png";
 
 const isNotActiveStyle =
@@ -11,6 +10,12 @@ const isActiveStyle =
   "flex items-center px-5 gap-3 font-extrabold border-r-2 border-black transition-all duration-200 ease-in-out-capitalize";
 
 const Sidebar = ({ user, closeToggle }) => {
+  const [categories, setCategories] = useState([]);
+  const fetchData = async () => {
+    const data = await getCategories();
+    setCategories(data);
+  };
+  useEffect(() => fetchData(), []);
   const handleCloseSidebar = () => {
     if (closeToggle) closeToggle(false);
   };
@@ -28,12 +33,12 @@ const Sidebar = ({ user, closeToggle }) => {
             }
           >
             <RiHomeFill />
-            Home
+            Inicio
           </NavLink>
           <h3 className="mt-2 px-5 text-base 2xl:text-xl">
-            Discover Categories
+            Conoce otros mundos
           </h3>
-          {categories.slice(0, categories.length - 1).map((category) => (
+          {categories?.slice(0, categories.length - 1).map((category) => (
             <NavLink
               to={`/category/${category.name}`}
               className={({ isActive }) =>

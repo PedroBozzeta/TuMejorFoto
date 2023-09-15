@@ -1,45 +1,112 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { v4 as uuidv4 } from "uuid";
 import { MdDownloadForOffline } from "react-icons/md";
-import { AiTwotoneDelete } from "react-icons/ai";
+import { AiTwotoneDelete, AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { BsFillArrowUpRightCircleFill } from "react-icons/bs";
-import { client, urlFor } from "../client";
-import { fetchUser } from "../utils/fetchUser";
+import { fetchUser, getUrlFunction } from "../clientFront";
+import Circle from "./Circle";
 
-const Pin = ({ pin: { save, postedBy, image, _id, destination } }) => {
+const Pin = ({ pin }) => {
   const [postHovered, setPostHovered] = useState(false);
-  const navigate = useNavigate();
-  const userInfo = fetchUser();
+  const [url, setUrl] = useState("");
+  const [saved, setSaved] = useState(false);
+  const [visible, setVisible] = useState("");
+  const [isImageLoad, setIsImageLoad] = useState(true);
 
-  const alreadySaved = !!save?.filter(
-    (item) => item.postedBy._id === userInfo.googleId
-  )?.length;
-  const savePin = (id) => {
-    if (alreadySaved) {
-      client
-        .patch(id)
-        .setIfMissing({ save: [] })
-        .insert("after", "save[-1]", [
-          {
-            _key: uuidv4(),
-            userId: userInfo.googleId,
-            postedBy: {
-              _type: "postedBy",
-              _ref: userInfo.googleId,
-            },
-          },
-        ])
-        .commit()
-        .then(() => {
-          window.location.reload();
+  const navigate = useNavigate();
+
+  const { postedBy, image, _id, destination } = pin;
+
+  const userInfo = fetchUser();
+  const fetchData = async () => {
+    const data = await getUrlFunction(_id);
+    setUrl(data.imageUrl);
+  };
+  useEffect(() => {
+    fetchData();
+    const isSaved = pin?.save?.some(
+      (item) => item?.postedBy?._id === userInfo?.googleId
+    );
+    if (!isImageLoad) {
+      setVisible("hidden");
+    } else {
+      setVisible("block");
+    }
+    setSaved(isSaved);
+  }, []);
+
+  const checkIfSaved = () => {
+    if (!saved && userInfo.googleId && postedBy._id !== userInfo.googleId) {
+      setSaved(true);
+      fetch(`${process.env.REACT_APP_BACKEND_URL}/like`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: userInfo.googleId,
+          pinId: _id,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.isSaved) {
+            console.log("El pin ya había sido guardado por este usuario");
+          } else {
+            if (data.nowSaved) {
+              console.log("El pin ha sido guardado por este usuario");
+            } else {
+              console.log("El pin NO ha sido guardado por este usuario");
+            }
+          }
+        })
+        .catch((error) => {
+          console.error("Error al verificar el pin:", error);
         });
     }
   };
-  const deletePin = (id) => {
-    client.delete(id).then((response) => {
-      window.location.reload();
-    });
+  const unsavePin = () => {
+    setSaved(false);
+    if (saved && userInfo.googleId) {
+      fetch(`${process.env.REACT_APP_BACKEND_URL}/unlike`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: userInfo.googleId,
+          pinId: _id,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.removed) {
+            console.log("El pin ha sido quitado de los guardados");
+          }
+        })
+        .catch((error) => {
+          console.error("Error al quitar el pin de los guardados:", error);
+        });
+    }
+  };
+  const deletePin = () => {
+    if (userInfo?.googleId === postedBy._id) {
+      fetch(`${process.env.REACT_APP_BACKEND_URL}/pin/${_id}`, {
+        method: "DELETE",
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.message) {
+            console.log(data.message);
+          }
+          if (data.error) {
+            console.error(data.error);
+          }
+        })
+        .catch((error) => {
+          console.error("Error al borrar el pin:", error);
+        });
+    }
   };
   return (
     <div className="m-2">
@@ -49,10 +116,28 @@ const Pin = ({ pin: { save, postedBy, image, _id, destination } }) => {
         onMouseLeave={() => setPostHovered(false)}
         onClick={() => navigate(`/pin-detail/${_id}`)}
       >
+        {isImageLoad && (
+          <div className={`rounded-lg py-10 w-full bg-gray-300`}>
+            <Circle
+              height={100}
+              width={100}
+              color="#4444ff"
+              wrapperStyle={{}}
+              wrapperClass=""
+              visible={true}
+              ariaLabel="oval-loading"
+              secondaryColor="#4fa94d"
+              strokeWidth={2}
+              strokeWidthSecondary={2}
+            />
+          </div>
+        )}
         <img
-          className="rounded-lg w-full"
+          style={{ display: isImageLoad ? "none" : "block" }}
+          className={`rounded-lg w-full`}
           alt="user-post"
-          src={urlFor(image).width(250).url()}
+          src={url}
+          onLoad={() => setIsImageLoad(false)}
         />
         {postHovered && (
           <div
@@ -62,31 +147,41 @@ const Pin = ({ pin: { save, postedBy, image, _id, destination } }) => {
             <div className="flex items-center justify-between">
               <div className="flex gap-2">
                 <a
-                  href={`${image?.asset?.url}?dl=`}
+                  href={`${image.asset.url}?width=250?dl=`}
                   download
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
                 >
                   <MdDownloadForOffline className="bg-white w-9 h-9 rounded-full flex items-center justify-center text-dark text-xl opacity-75 hover:opacity-100 hover:shadow-md outline-none" />
                 </a>
               </div>
-              {alreadySaved ? (
-                <button
-                  type="button"
-                  className="bg-red-500 opacity-70 hover:opacity-100 text-white font-bold px-5 py-1 text-base rounded-3xl hover:shadow-md outlined-none"
-                >
-                  {save?.length} Saved
-                </button>
-              ) : (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    savePin(_id);
-                  }}
-                  type="button"
-                  className="bg-red-500 opacity-70 hover:opacity-100 text-white font-bold px-5 py-1 text-base rounded-3xl hover:shadow-md outlined-none"
-                >
-                  Save
-                </button>
+              {postedBy._id !== userInfo?.googleId && userInfo?.googleId && (
+                <>
+                  {saved ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        unsavePin();
+                      }}
+                      type="button"
+                      className="bg-white opacity-70 hover:opacity-100 text-red-500 font-bold px-1 py-1 text-lg rounded-3xl hover:shadow-md outlined-none"
+                    >
+                      <AiFillHeart />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        checkIfSaved();
+                      }}
+                      type="button"
+                      className="bg-white opacity-70 hover:opacity-100 text-red-500 font-bold px-1 py-1 text-lg rounded-3xl hover:shadow-md outlined-none"
+                    >
+                      <AiOutlineHeart />
+                    </button>
+                  )}
+                </>
               )}
             </div>
             <div className="flex justify-between items-center gap-2 w-full">
