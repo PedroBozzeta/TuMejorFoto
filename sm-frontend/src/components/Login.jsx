@@ -1,21 +1,47 @@
-import React, { useEffect } from "react";
-import GoogleLogin from "react-google-login";
+import React, { useEffect, useState } from "react";
+import jwt_decode from "jwt-decode";
 import { useNavigate } from "react-router-dom";
-import { FcGoogle } from "react-icons/fc";
-import shareVideo from "../assets/share.mp4";
-import logo from "../assets/logowhite.png";
+import logo from "../assets/logo-pin.png";
+import Modal from "./Modal";
 const Login = () => {
+  const [isModalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
-  const responseGoogle = (response) => {
-    localStorage.setItem("user", JSON.stringify(response.profileObj));
-    const { name, googleId, imageUrl } = response.profileObj;
+  useEffect(() => {
+    if (window.google && window.google.accounts) {
+      /* global google */
+      google.accounts.id.initialize({
+        client_id: process.env.REACT_APP_GOOGLE_API_TOKEN,
+        callback: responseGoogle,
+      });
+    } else {
+      console.error("Google no está definido");
+    }
 
+    google.accounts.id.renderButton(document.getElementById("signInDiv"), {
+      theme: "outline",
+      size: "large",
+      width: "300px",
+      text: "continue_with",
+    });
+    localStorage.clear();
+  }, []);
+  const responseGoogle = (response) => {
+    const userObject = jwt_decode(response.credential);
+    if (userObject.sub && userObject.picture) {
+      userObject.googleId = userObject.sub;
+      userObject.imageUrl = userObject.picture;
+      delete userObject.sub;
+      delete userObject.picture;
+    }
+    const { email, name, googleId, imageUrl } = userObject;
     const doc = {
       _id: googleId,
       _type: "user",
       userName: name,
       image: imageUrl,
+      email: email,
     };
+
     fetch(`${process.env.REACT_APP_BACKEND_URL}/login`, {
       method: "POST",
       headers: {
@@ -30,7 +56,15 @@ const Login = () => {
         return response.json();
       })
       .then((response) => {
-        navigate("/", { replace: true });
+        if (response.status === "registered" || response.status === "updated") {
+          localStorage.setItem("user", JSON.stringify(userObject));
+          console.log("Usuario registrado");
+          navigate("/", { replace: true });
+        } else {
+          setModalOpen(true);
+          localStorage.clear();
+          console.log("usuario no registrado");
+        }
       })
       .catch((error) => {
         console.error(
@@ -39,54 +73,24 @@ const Login = () => {
         );
       });
   };
-  // setGoogleLogin(){
+  const onFailure = (err) => {
+    console.error(err);
+  };
 
-  // }
-  // useEffect(() => {
-  //   const start = () => {
-  //     gapi.auth2.getAuthInstance({
-  //       clientId: process.env.REACT_APP_GOOGLE_API_TOKEN,
-  //     });
-  //   };
-  //   gapi.load("client:auth2", start);
-  // }, []);
   return (
-    <div className="flex justify-start items-center flex-col h-screen">
-      <div className="relative w-full h-full">
-        <video
-          src={shareVideo}
-          type="video/mp4"
-          loop
-          controls={false}
-          muted
-          autoPlay
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute flex flex-col justify-center items-center top-0 right-0 left-0 bottom-0 bg-blackOverlay">
-          <div className="p-5">
-            <img src={logo} width="130" alt="logo" />
-          </div>
+    <div className=" color-change-2x flex justify-center items-center  h-screen">
+      <div className="shadow-2xl fade-in rounded max-w-md pb-10 bg-[#fefefe] flex flex-col justify-center items-center">
+        <div className="p-5">
+          <img src={logo} width="300" alt="logo" />
+        </div>
+        <div className="flex flex-col items-center ">
+          <p className="pb-2 text-sm">Ingresa con Google!</p>
           <div className="shadow-2xl">
-            <GoogleLogin
-              clientId="625153889087-l2h9q50udr516pa9k7bsstl0s9as4otb.apps.googleusercontent.com"
-              render={(renderProps) => (
-                <button
-                  disabled={renderProps.disabled}
-                  onClick={renderProps.onClick}
-                  className="bg-mainColor flex justify-center items-center p-3 rounded-lg cursor-pointer outline-none"
-                >
-                  <FcGoogle className="mr-4" />
-                  Ingresa con tu cuenta de Google
-                </button>
-              )}
-              onSuccess={responseGoogle}
-              onFailure={responseGoogle}
-              cookiePolicy="single_host_origin"
-            />
-            <div className="g-signin2" data-onsuccess="onSignIn"></div>
+            <div id="signInDiv" data-onsuccess="onSignIn"></div>
           </div>
         </div>
       </div>
+      <Modal isOpen={isModalOpen} />
     </div>
   );
 };

@@ -11,6 +11,7 @@ const CreatePin = ({ user }) => {
   const [destination, setDestination] = useState("");
   const [loading, setLoading] = useState(false);
   const [fields, setFields] = useState();
+  const [validUrl, setValidUrl] = useState(true);
   const [categories, setCategories] = useState([]);
   const [category, setCategory] = useState([]);
   const [imageAsset, setImageAsset] = useState();
@@ -21,7 +22,12 @@ const CreatePin = ({ user }) => {
     const data = await getCategories();
     setCategories(data);
   };
-  useEffect(() => fetchData(), []);
+  useEffect(() => {
+    validateURL();
+  }, [destination]);
+  useEffect(() => {
+    fetchData();
+  }, []);
   const uploadImage = (e) => {
     const { type, name } = e.target.files[0];
     if (
@@ -52,8 +58,15 @@ const CreatePin = ({ user }) => {
       setWrongImageType(true);
     }
   };
+
+  const validateURL = () => {
+    const regex =
+      /^www\.[\S]+(\.com|\.pe|\.org|\.net|\.edu|\.gov|\.mil|\.biz|\.info|\.mobi|\.name|\.aero|\.asia|\.jobs|\.museum)(\/[\S]*)?$/;
+    setValidUrl(regex.test(destination));
+  };
+
   const savePin = () => {
-    if (title && about && destination && imageAsset?._id && category) {
+    if (title && about && validUrl && imageAsset?._id && category) {
       const doc = {
         _type: "pin",
         title,
@@ -84,7 +97,7 @@ const CreatePin = ({ user }) => {
         .catch((err) => console.error(err));
     } else {
       setFields(true);
-      setTimeout(() => setFields(false), 2000);
+      setTimeout(() => setFields(false), 3000);
     }
   };
   return (
@@ -125,7 +138,7 @@ const CreatePin = ({ user }) => {
                 <img
                   src={imageAsset?.url}
                   alt="uploaded-pic"
-                  className="h-full w-full"
+                  className="h-full w-full object-cover"
                 />
                 <button
                   type="button"
@@ -143,7 +156,7 @@ const CreatePin = ({ user }) => {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Ponle un título!"
+            placeholder="Ponle un título a esta obra!"
             className="outline-none text-wxl sm:text-3xl font-bold border-b-2 border-gray-200 p-2"
           />
           {user && (
@@ -163,12 +176,16 @@ const CreatePin = ({ user }) => {
             placeholder="Cuéntanos acerca de tu imagen"
             className="outline-none text-base sm:text-lg border-b-2 border-gray-200 p-2"
           />
-
+          {!validUrl && fields && (
+            <p className="text-base sm:text-sm text-red-500">
+              Por favor ingresa una dirección válida
+            </p>
+          )}
           <input
             type="text"
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
-            placeholder="Añade un link para ver más imágenes así"
+            placeholder="Ejemplo: www.instagram.com/micuentabienfachera"
             className="outline-none text-base sm:text-lg border-b-2 border-gray-200 p-2"
           />
           <div className="flex flex-col">

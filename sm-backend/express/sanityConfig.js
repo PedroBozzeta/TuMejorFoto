@@ -64,14 +64,35 @@ app.get('/user/:googleId', (req, res) => {
 })
 
 app.post('/login', (req, res) => {
+  const {email} = req.body
+
+  // Consulta si el usuario ya está registrado con el email proporcionado
   client
-    .createIfNotExists(req.body)
-    .then((data) => {
-      console.log('Usuario creado o ya existente')
-      res.status(200).json(data)
+    .fetch(`*[_type == "user" && email == $email]`, {email: email})
+    .then((users) => {
+      if (users.length > 0) {
+        const existingUser = users[0]
+
+        // Aquí puedes verificar si falta alguna información. Por ejemplo:
+        if (!existingUser.userName || !existingUser.image) {
+          // Si falta información, elimina el registro existente
+          client.delete(existingUser._id).then(() => {
+            // Y luego crea un nuevo registro con todos los datos
+            client.create(req.body).then((newUser) => {
+              res.status(200).json({status: 'updated', user: newUser})
+            })
+          })
+        } else {
+          // Si el usuario ya está completo y registrado
+          res.status(200).json({status: 'registered', user: existingUser})
+        }
+      } else {
+        // Si el usuario no está registrado, devolver una respuesta indicando esto
+        res.status(200).json({status: 'unregistered', user: null})
+      }
     })
     .catch((err) => {
-      console.error('Error al crear usuario:', err.message)
+      console.error('Error al buscar o actualizar usuario:', err.message)
       res.status(500).json({error: err.message})
     })
 })

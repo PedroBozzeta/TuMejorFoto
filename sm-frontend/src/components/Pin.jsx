@@ -18,22 +18,38 @@ const Pin = ({ pin }) => {
   const { postedBy, image, _id, destination } = pin;
 
   const userInfo = fetchUser();
-  const fetchData = async () => {
-    const data = await getUrlFunction(_id);
-    setUrl(data.imageUrl);
-  };
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchData = async () => {
+      const data = await getUrlFunction(_id);
+      if (isMounted) {
+        setUrl(data.imageUrl);
+      }
+    };
+
     fetchData();
+
     const isSaved = pin?.save?.some(
       (item) => item?.postedBy?._id === userInfo?.googleId
     );
-    if (!isImageLoad) {
-      setVisible("hidden");
+
+    if (isMounted) {
+      setSaved(isSaved);
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isImageLoad) {
+      setVisible("none");
     } else {
       setVisible("block");
     }
-    setSaved(isSaved);
-  }, []);
+  }, [isImageLoad]);
 
   const checkIfSaved = () => {
     if (!saved && userInfo.googleId && postedBy._id !== userInfo.googleId) {
@@ -133,7 +149,7 @@ const Pin = ({ pin }) => {
           </div>
         )}
         <img
-          style={{ display: isImageLoad ? "none" : "block" }}
+          style={{ display: visible }}
           className={`rounded-lg w-full`}
           alt="user-post"
           src={url}

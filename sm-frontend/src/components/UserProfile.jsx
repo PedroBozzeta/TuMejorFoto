@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { AiOutlineLogout } from "react-icons/ai";
 import { useParams, useNavigate } from "react-router-dom";
-import { GoogleLogout } from "react-google-login";
 import MasonryLayout from "./MasonryLayout";
 import Spinner from "./Spinner";
 
 const activeBtnStyles =
-  "bg-red-500 text-white font-bold p-2 rounded-full w-20 outline-none";
+  "bg-red-500 text-white font-bold p-3 rounded-full w-24 outline-none";
 const notActiveBtnStyles =
-  "bg-primary mr-4 text-black font-bold p-2 rounded-full w-20 outline-none";
+  "bg-primary text-black font-bold p-3 rounded-full w-24 outline-none";
 
 const UserProfile = () => {
   const [user, setUser] = useState();
   const [pins, setPins] = useState();
   const [text, setText] = useState("Publicado");
   const [activeBtn, setActiveBtn] = useState("created");
+  const [hovered, setHovered] = useState(false);
   const navigate = useNavigate();
   const { userId } = useParams();
 
@@ -63,7 +63,6 @@ const UserProfile = () => {
 
   const logout = () => {
     localStorage.clear();
-
     navigate("/login");
   };
 
@@ -75,12 +74,12 @@ const UserProfile = () => {
         <div className="relative flex flex-col mb-7">
           <div className="flex flex-col justify-center items-center">
             <img
-              className=" w-full h-370 2xl:h-510 shadow-lg object-cover"
+              className=" w-full h-56 2xl:h-96 object-cover"
               src="https://source.unsplash.com/1600x900/?nature,photography,technology"
               alt="user-pic"
             />
             <img
-              className="rounded-full w-20 h-20 -mt-10 shadow-xl object-cover"
+              className=" border-sm 2xl:h-32 2xl:w-32 rounded-md w-20 h-20 -mt-10 2xl:-mt-16 border-4 border-white object-cover"
               src={user.image}
               alt="user-pic"
             />
@@ -90,21 +89,16 @@ const UserProfile = () => {
           </h1>
           <div className="absolute top-0 z-1 right-0 p-2">
             {userId === User?.googleId && (
-              <GoogleLogout
-                clientId={`${process.env.REACT_APP_GOOGLE_API_TOKEN}`}
-                render={(renderProps) => (
-                  <button
-                    type="button"
-                    className=" bg-white p-2 rounded-full cursor-pointer outline-none shadow-md"
-                    onClick={renderProps.onClick}
-                    disabled={renderProps.disabled}
-                  >
-                    <AiOutlineLogout color="red" fontSize={21} />
-                  </button>
-                )}
-                onLogoutSuccess={logout}
-                cookiePolicy="single_host_origin"
-              />
+              <button
+                type="button"
+                onClick={() => logout()}
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+                className=" flex transition ease-in-out duration-100 bg-white justify-around p-2 rounded-full cursor-pointer outline-none shadow-md"
+              >
+                {hovered && <p className="px-1">Salir</p>}
+                <AiOutlineLogout color="red" fontSize={21} />
+              </button>
             )}
           </div>
         </div>

@@ -94,7 +94,7 @@ const PinDetail = ({ user }) => {
         >
           <div className="flex justify-center items-center md:items-start flex-initial">
             <img
-              className="rounded-t-3xl rounded-b-lg"
+              className="rounded-t-3xl max-h-[50rem] rounded-b-lg"
               src={pinDetail?.image && url}
               alt="user-post"
             />
@@ -181,7 +181,7 @@ const PinDetail = ({ user }) => {
                 />
                 <button
                   type="button"
-                  className="bg-red-500 text-white rounded-full px-6 py-2 font-semibold text-base outline-none"
+                  className="bg-marron text-white rounded-full px-6 py-2 font-semibold text-base outline-none"
                   onClick={addComment}
                 >
                   {addingComment ? "Enviando..." : "Enviar"}
