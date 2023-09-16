@@ -8,16 +8,37 @@ import Circle from "./Circle";
 
 const Pin = ({ pin }) => {
   const [postHovered, setPostHovered] = useState(false);
+  const [isMediumDevice, setIsMediumDevice] = useState(
+    window.innerWidth <= 768
+  );
   const [url, setUrl] = useState("");
   const [saved, setSaved] = useState(false);
   const [visible, setVisible] = useState("");
   const [isImageLoad, setIsImageLoad] = useState(true);
-
+  const [visibleButtons, setVisibleButtons] = useState(false);
   const navigate = useNavigate();
 
   const { postedBy, image, _id, destination } = pin;
 
   const userInfo = fetchUser();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMediumDevice(window.innerWidth <= 768);
+    };
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+  useEffect(() => {
+    if (isMediumDevice || postHovered) {
+      setVisibleButtons(true);
+    } else {
+      setVisibleButtons(false);
+    }
+  }, [isMediumDevice, postHovered]);
   useEffect(() => {
     let isMounted = true;
 
@@ -155,7 +176,7 @@ const Pin = ({ pin }) => {
           src={url}
           onLoad={() => setIsImageLoad(false)}
         />
-        {postHovered && (
+        {visibleButtons && (
           <div
             style={{ height: "100%" }}
             className="absolute top-0 w-full h-full flex flex-col justify-between p-1 pr-2 pt-2 z-50"

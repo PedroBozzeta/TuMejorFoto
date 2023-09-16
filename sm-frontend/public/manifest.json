@@ -1,21 +1,21 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Pintagram",
+  "name": "Galería en linea",
   "icons": [
     {
-      "src": "favicon.ico",
+      "src": "pintagram-ico.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     },
     {
-      "src": "logo192.png",
+      "src": "logo-pin.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "400x200"
     },
     {
-      "src": "logo512.png",
+      "src": "logo-white.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "374x91"
     }
   ],
   "start_url": ".",
