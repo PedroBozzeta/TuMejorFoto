@@ -146,7 +146,7 @@ const Pin = ({ pin }) => {
     }
   };
   return (
-    <div className="m-2">
+    <div className="m-4">
       <div
         className="relative cursor-zoom-in w-auto hover:shadow-lg rounded-lg overflow-hidden transition-all duration-500 ease-in-out"
         onMouseEnter={() => setPostHovered(true)}

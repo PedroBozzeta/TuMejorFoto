@@ -3,7 +3,7 @@ import { HiMenu } from "react-icons/hi";
 import { AiFillCloseCircle } from "react-icons/ai";
 import { Link, Route, Routes } from "react-router-dom";
 import { Sidebar, UserProfile } from "../components";
-import logo from "../assets/logo-white.png";
+import logo from "../assets/logo-pin.png";
 import Pins from "./Pins";
 import { fetchUser } from "../clientFront";
 const Home = () => {
@@ -43,19 +43,19 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="flex bg-gray-50 md:flex-row flex-col h-screen transaction-height duration-75 ease-out">
+    <div className="flex bg-white md:flex-row flex-col h-screen transaction-height duration-75 ease-out">
       <div className="hidden md:flex h-screen flex-initial">
         <Sidebar user={user && user} />
       </div>
       <div className="flex md:hidden flex-row">
-        <div className="p-2 w-full flex flex-row justify-between items-center shadow-md">
+        <div className="p-4 w-full flex flex-row justify-between items-center shadow-md">
           <HiMenu
             fontSize={40}
             className="cursor-pointer"
             onClick={() => setToggleSidebar(true)}
           />
           <Link to="/">
-            <img src={logo} alt="logo" className="w-48" />
+            <img src={logo} alt="logo" className="w-36" />
           </Link>
           {user ? (
             <Link to={`user-profile/${user?._id}`}>
@@ -64,17 +64,17 @@ const Home = () => {
           ) : (
             <Link
               to={`/login`}
-              className="flex my-5 mb-3 gap-2 p-2 transition duration-200 ease-in-out text-white items-center bg-[#5f483c] rounded-lg shadow-2xl mx-3"
+              className="flex gap-2 p-2 transition duration-200 ease-in-out text-white items-center bg-[#5f483c] rounded-lg shadow-2xl mx-3"
             >
-              <p className="hover:text-white">Ingresar</p>
+              <p className="hover:text-white text-sm">Ingresar</p>
             </Link>
           )}
         </div>
         {toggleSidebar && (
-          <div className="fixed w-4/5 bg-white h-screen overflow-y-auto shadow-md z-10 animate-slide-in">
+          <div className="fixed w-2/3 bg-white h-screen overflow-y-auto shadow-md z-10 animate-slide-in">
             <div className="absolute w-full flex justify-end items-center p-2">
               <AiFillCloseCircle
-                fontSize={30}
+                fontSize={24}
                 className="cursor-pointer"
                 onClick={() => setToggleSidebar(false)}
               />

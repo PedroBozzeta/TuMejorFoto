@@ -28,6 +28,9 @@ const Pins = ({ user }) => {
             }
           />
         </Routes>
+        <p className="w-full text-xs text-right items-end">
+          Desarrollado por Pedro Bozzeta
+        </p>
       </div>
     </div>
   );

@@ -130,7 +130,7 @@ const PinDetail = ({ user }) => {
               <p className="font-bold">{pinDetail?.postedBy?.userName}</p>
             </Link>
             <div>
-              <h1 className="text-4xl font-bold break-words mt-3">
+              <h1 className="text-2xl font-bold break-words mt-3">
                 {pinDetail.title}
               </h1>
               <p className="mt-3">{pinDetail.about}</p>
@@ -192,8 +192,8 @@ const PinDetail = ({ user }) => {
         </div>
       )}
       {pins?.length > 0 && (
-        <h2 className="text-center font-bold text-2xl mt-8 mb-4">
-          Más como esta
+        <h2 className="text-center font-bold text-xl md:text-2xl mt-8 mb-4">
+          Más imágenes como esta
         </h2>
       )}
       {pins ? (

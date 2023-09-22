@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { AiOutlineCloudUpload } from "react-icons/ai";
 import { MdDelete } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
-import { getCategories } from "../clientFront";
+import { categories } from "../clientFront.js";
 
 import Spinner from "./Spinner";
 const CreatePin = ({ user }) => {
@@ -12,22 +12,15 @@ const CreatePin = ({ user }) => {
   const [loading, setLoading] = useState(false);
   const [fields, setFields] = useState();
   const [validUrl, setValidUrl] = useState(true);
-  const [categories, setCategories] = useState([]);
   const [category, setCategory] = useState([]);
   const [imageAsset, setImageAsset] = useState();
   const [wrongImageType, setWrongImageType] = useState();
   const navigate = useNavigate();
 
-  const fetchData = async () => {
-    const data = await getCategories();
-    setCategories(data);
-  };
   useEffect(() => {
     validateURL();
   }, [destination]);
-  useEffect(() => {
-    fetchData();
-  }, []);
+
   const uploadImage = (e) => {
     const { type, name } = e.target.files[0];
     if (
@@ -59,10 +52,21 @@ const CreatePin = ({ user }) => {
     }
   };
 
+  const addHttpsIfMissing = (url) => {
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      return "https://" + url;
+    }
+    return url;
+  };
+
   const validateURL = () => {
-    const regex =
-      /^www\.[\S]+(\.com|\.pe|\.org|\.net|\.edu|\.gov|\.mil|\.biz|\.info|\.mobi|\.name|\.aero|\.asia|\.jobs|\.museum)(\/[\S]*)?$/;
-    setValidUrl(regex.test(destination));
+    const updatedDestination = addHttpsIfMissing(destination);
+    if (updatedDestination !== destination) {
+      setDestination(updatedDestination);
+    }
+
+    const regex = /^(https?:\/\/)?(www\.)?[\w-]+\.\w{2,}([\w-./?=&#%]*)?$/i;
+    setValidUrl(regex.test(updatedDestination));
   };
 
   const savePin = () => {
@@ -216,7 +220,7 @@ const CreatePin = ({ user }) => {
             <button
               type="button"
               onClick={savePin}
-              className="bg-red-500 text-while font-bold p-2 rounded-full w-28 outline-none"
+              className="bg-red-500 text-white font-bold p-2 rounded-full w-28 outline-none"
             >
               Guardar
             </button>

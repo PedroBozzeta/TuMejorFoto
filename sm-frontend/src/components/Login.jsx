@@ -3,6 +3,7 @@ import jwt_decode from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo-pin.png";
 import Modal from "./Modal";
+import "../css/login.css";
 const Login = () => {
   const [isModalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -18,10 +19,13 @@ const Login = () => {
     }
 
     google.accounts.id.renderButton(document.getElementById("signInDiv"), {
-      theme: "outline",
+      theme: "dark",
+      scope: "profile email",
       size: "large",
-      width: "300px",
+      width: "200px",
       text: "continue_with",
+      logo_alignment: "left",
+      shape: "pill",
     });
     localStorage.clear();
   }, []);
@@ -78,16 +82,26 @@ const Login = () => {
   };
 
   return (
-    <div className=" color-change-2x flex justify-center items-center  h-screen">
-      <div className="shadow-2xl fade-in rounded max-w-md pb-10 bg-[#fefefe] flex flex-col justify-center items-center">
+    <div className="animatedBackground flex justify-center items-center  h-screen">
+      <div
+        className="shadow-2xl fade-in rounded w-3/5 max-w-lg p-4 bg-[#fefefe] 
+      flex flex-col justify-center items-center"
+      >
         <div className="p-5">
-          <img src={logo} width="300" alt="logo" />
+          <img src={logo} className="w-48 md:w-56 object-cover" alt="logo" />
         </div>
-        <div className="flex flex-col items-center ">
-          <p className="pb-2 text-sm">Ingresa con Google!</p>
-          <div className="shadow-2xl">
-            <div id="signInDiv" data-onsuccess="onSignIn"></div>
+        <div className="flex flex-col items-center justify-between h-24 md:h-36 w-full">
+          <p className="pb-2 text-sm md:text-base">Ingresa con Google!</p>
+          <div className="flex justify-center pl-4">
+            <div
+              id="signInDiv"
+              className="flex justify-self-end md:text-lg"
+              data-onsuccess="onSignIn"
+            ></div>
           </div>
+          <p className="w-full text-[10px] text-right mt-4 pr-4">
+            Desarrollado por Pedro Bozzeta
+          </p>
         </div>
       </div>
       <Modal isOpen={isModalOpen} />
