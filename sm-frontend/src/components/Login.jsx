@@ -84,7 +84,7 @@ const Login = () => {
   return (
     <div className="animatedBackground flex justify-center items-center  h-screen">
       <div
-        className="shadow-2xl fade-in rounded w-3/5 max-w-lg p-4 bg-[#fefefe] 
+        className="shadow-2xl fade-in rounded w-4/5 max-w-lg p-4 bg-[#fefefe] 
       flex flex-col justify-center items-center"
       >
         <div className="p-5">
