@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { MdDownloadForOffline } from "react-icons/md";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { getUrlFunction } from "../clientFront";
 import MasonryLayout from "./MasonryLayout";
 import Spinner from "./Spinner";

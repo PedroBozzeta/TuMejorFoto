@@ -107,7 +107,7 @@ const CreatePin = ({ user }) => {
   return (
     <div className="flex flex-col justify-center items-center mt-5 lg:h-4/5">
       {fields && (
-        <p className="text-red-500 mb-5 text-xl transition-all duration-150 ease-in">
+        <p className="text-red-500 mb-5 text-lg transition-all duration-150 ease-in">
           Por favor llena todos los campos
         </p>
       )}
@@ -161,7 +161,7 @@ const CreatePin = ({ user }) => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Ponle un título a esta obra!"
-            className="outline-none text-wxl sm:text-3xl font-bold border-b-2 border-gray-200 p-2"
+            className="outline-none text-xl font-bold border-b-2 border-gray-200 p-2"
           />
           {user && (
             <div className="flex gap-2 my-2 items-center bg-white rounded-lg">
@@ -190,7 +190,7 @@ const CreatePin = ({ user }) => {
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
             placeholder="Ejemplo: www.instagram.com/micuentabienfachera"
-            className="outline-none text-base sm:text-lg border-b-2 border-gray-200 p-2"
+            className="outline-none text-base border-b-2 border-gray-200 p-2"
           />
           <div className="flex flex-col">
             <p className="mb-2 font-semibold text-lg sm:text-xl">

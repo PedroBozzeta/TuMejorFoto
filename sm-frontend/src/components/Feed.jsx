@@ -19,12 +19,10 @@ const Feed = () => {
     fetch(`${process.env.REACT_APP_BACKEND_URL}/pins?categoryId=${categoryId}`)
       .then((response) => response.json())
       .then((data) => {
-        setTimeout(() => {
-          clearTimeout(timeoutId);
-          setPins(data);
-          setLoading(false);
-          setSlowConnection(false);
-        }, 8000);
+        clearTimeout(timeoutId);
+        setPins(data);
+        setLoading(false);
+        setSlowConnection(false);
       })
       .catch((error) => {
         console.error("Error fetching pins:", error);

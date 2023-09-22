@@ -97,6 +97,7 @@ const Login = () => {
               id="signInDiv"
               className="flex justify-self-end md:text-lg"
               data-onsuccess="onSignIn"
+              data-onfailure={onFailure}
             ></div>
           </div>
           <p className="w-full text-[10px] text-right mt-4 pr-4">
